@@ -5,7 +5,7 @@ use std::{
 
 use casper_types::{
     bytesrepr::{FromBytes, ToBytes},
-    BinaryRequest, BlockHash, BlockHeader, BlockHeaderV2, Digest,
+    BinaryRequest, BlockHash, BlockHeader, BlockHeaderV2, DbTag, Digest,
 };
 use clap::Parser;
 use rand::rngs::ThreadRng;
@@ -29,7 +29,7 @@ fn main() {
     let digest: Digest = Digest::from_hex(args.block_hash).unwrap();
     let block_hash: BlockHash = BlockHash::new(digest);
     let req = BinaryRequest::Get {
-        db: "block_header_v2".to_string(),
+        db: DbTag::BlockHeaderV2 as u8,
         key: block_hash.to_bytes().unwrap(),
     };
     stream
