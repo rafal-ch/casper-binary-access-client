@@ -2,7 +2,7 @@ use std::io::{self, Read, Write};
 
 use casper_types::{
     bytesrepr::{FromBytes, ToBytes},
-    BinaryRequest, BlockHash, BlockHeader, DbId, Digest,
+    BinaryRequest, BlockBody, BlockHash, BlockHeader, DbId, Digest,
 };
 use clap::Parser;
 use juliet::{
@@ -13,11 +13,14 @@ use tokio::net::TcpStream;
 
 #[derive(Parser, Debug)]
 struct Args {
-    /// Block hash to retrieve header for
+    /// DB
     #[arg(short, long)]
-    block_hash: Option<String>,
+    db: String,
+    #[arg(short, long)]
+    key: String,
 }
 
+/*
 fn main_classic() {
     let args = Args::parse();
 
@@ -77,6 +80,7 @@ fn main_classic() {
     //     response
     // );
 }
+*/
 
 //--------------------------------------------------------------------------------- JULIET ---------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------- JULIET ---------------------------------------------------------------------------------
@@ -114,20 +118,28 @@ async fn main() {
     });
 
     println!("Sending request...");
-    let key = match args.block_hash {
-        Some(block_hash) => {
-            println!("for BlockHash");' 
-            let digest: Digest = Digest::from_hex(block_hash).unwrap();
-            let block_hash: BlockHash = BlockHash::new(digest);
-            block_hash.to_bytes().unwrap()
-        }
-        None => todo!(),
+
+    let key = hex::FromHex::from_hex(args.key).unwrap();
+    let db = match args.db.as_str() {
+        "BlockHeader" => DbId::BlockHeader,
+        "BlockHeaderV2" => DbId::BlockHeaderV2,
+        "BlockMetadata" => DbId::BlockMetadata,
+        "Deploys" => DbId::Deploys,
+        "Transactions" => DbId::Transactions,
+        "DeployMetadata" => DbId::DeployMetadata,
+        "ExecutionResults" => DbId::ExecutionResults,
+        "Transfer" => DbId::Transfer,
+        "StateStore" => DbId::StateStore,
+        "BlockBody" => DbId::BlockBody,
+        "BlockBodyV2" => DbId::BlockBodyV2,
+        "FinalizedApprovals" => DbId::FinalizedApprovals,
+        "VersionedFinalizedApprovals" => DbId::VersionedFinalizedApprovals,
+        "ApprovalsHashes" => DbId::ApprovalsHashes,
+        "VersionedApprovalsHashes" => DbId::VersionedApprovalsHashes,
+        _ => panic!("unknown db"),
     };
 
-    let req = BinaryRequest::Get {
-        db: DbId::BlockHeaderV2,
-        key,
-    };
+    let req = BinaryRequest::Get { db, key };
     let payload = req.to_bytes().unwrap();
 
     dbg!(&payload);
@@ -145,9 +157,20 @@ async fn main() {
             //     .expect("did not expect invalid UTF8");
             let response_payload = response.unwrap();
             dbg!(&response_payload);
-            let (block_header, _): (BlockHeader, _) =
-                BlockHeader::from_bytes(&response_payload).unwrap();
-            println!("{block_header:?}");
+
+            match args.db.as_str() {
+                "BlockHeaderV2" => {
+                    let (block_header, _): (BlockHeader, _) =
+                        BlockHeader::from_bytes(&response_payload).unwrap();
+                    println!("{block_header:?}");
+                }
+                "BlockBodyV2" => {
+                    let (block_body, _): (BlockBody, _) =
+                        BlockBody::from_bytes(&response_payload).unwrap();
+                    println!("{block_body:?}");
+                }
+                _ => panic!("unsupported"),
+            };
         }
         Err(err) => {
             println!("server error: {}", err);

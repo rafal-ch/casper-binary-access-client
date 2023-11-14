@@ -7,7 +7,7 @@ authors = ["Rafał Chabowski <rafal@casperlabs.io>"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-casper-types = { version = "3.0.0", features = ["std"] }
+casper-types = { version = "3.0.0", features = ["std", "json-schema"] }
 clap = { version = "4.4.7", features = ["derive"] }
 hex = "0.4.3"
 rand = "0.8.5"
@@ -16,4 +16,4 @@ tokio-stream = { version = "0.1.14", features = [] }
 juliet = { path = "/home/magister/Downloads/juliet/casper-node/juliet" }
 
 [patch.crates-io]
-casper-types = { path = "../casper-node/types" }
+casper-types = { path = "../casper-node/types"}
